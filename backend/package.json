@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "build": "node -e \"const fs = require('fs'); fs.rmSync('dist', { recursive: true, force: true }); fs.mkdirSync('dist'); fs.readdirSync('.').forEach(file => { if (fs.statSync(file).isDirectory() && !['node_modules', 'dist', '.git'].includes(file)) { fs.cpSync(file, 'dist/' + file, { recursive: true }); } });\"",
+    "build": "node -e \"const fs = require('fs'); fs.rmSync('dist', { recursive: true, force: true }); fs.cpSync('src', 'dist', { recursive: true });\"",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js"
   },
@@ -15,6 +15,7 @@
   "dependencies": {
     "@clerk/express": "^2.1.29",
     "cors": "^2.8.6",
+    "cron": "^4.4.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "mongoose": "^9.7.0"

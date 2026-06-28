@@ -3,8 +3,8 @@ import "dotenv/config";
 import fs from "fs"; //file system
 import path from "path";
 
-import User from "../models/user.model.js";
-import { connectDB } from "../lib/db.js";
+import User from "./models/user.model.js";
+import { connectDB } from "./lib/db.js";
 
 import cors from "cors";
 import { clerkMiddleware } from "@clerk/express";
