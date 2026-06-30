@@ -14,6 +14,7 @@ import job from "./lib/cron.js";
 
 import clerkWebhook from "./webhooks/clerk.webhook.js";
 import authRoutes from "./routes/auth.routes.js";
+import messageRoutes from "./routes/message.routes.js";
 
 
 const PORT = process.env.PORT;
@@ -35,8 +36,9 @@ app.get("/health", (req, res) => {
 });
 
 app.get("/api/auth", authRoutes);
+app.get("/api/messages", messageRoutes);
 
-// if the public directory exists, serve the static files
+// if the public directory exists, serve the static filess
 // this is for the production build
 if (fs.existsSync(publicDir)) {
   app.use(express.static(publicDir));
