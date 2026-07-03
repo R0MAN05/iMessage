@@ -11,6 +11,7 @@ import { clerkMiddleware } from "@clerk/express";
 import User from "./models/user.model.js";
 import { connectDB } from "./lib/db.js";
 import job from "./lib/cron.js";
+import {app, server} from "./lib/socket.js";
 
 import clerkWebhook from "./webhooks/clerk.webhook.js";
 import authRoutes from "./routes/auth.routes.js";
@@ -48,7 +49,7 @@ if (fs.existsSync(publicDir)) {
   });
 }
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   connectDB();
   console.log("Server is up and running on PORT:", PORT);
 
