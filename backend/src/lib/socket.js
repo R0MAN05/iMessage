@@ -1,6 +1,6 @@
 import express from "express";
 import http from "http";
-import {server} from "socket.io";
+import {Server} from "socket.io";
 
 
 const app = express();
@@ -20,7 +20,7 @@ const userSocketMap = {};
 
 io.on("connection", (socket) => {   //(socket) is basically a user which is connected, its an object.  "connection" it must be this string to work.
 
-    const userId = socket.handshake.query.userId;   //this field is gonna be sent from frontend and receive here.
+    const userId = socket.handshake.query.userId;   //this field is gonna be sent from frontend and received here.
     if(userId) userSocketMap[userId] = socket.id;   //if there's a userId then put that id into online users object array i.e. userSocketMap.
 
     // io.emit() sends event to everyone - broadcast.
