@@ -1,8 +1,11 @@
 import React from 'react'
+import toast from 'react-hot-toast'
 
 const Chatpage = () => {
   return (
-    <div>Chatpage</div>
+    <div>
+      Chatpage
+    </div>
   )
 }
 
