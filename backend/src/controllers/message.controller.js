@@ -21,8 +21,8 @@ export async function getUsersForSidebar(req, res) {
 
 export async function getConversationForSidebar(req, res) {
   try {
-    const LoggedInUserId = req.user._id;
-    const conversations = await Message.aggregrate([
+    const loggedInUserId = req.user._id;
+    const conversations = await Message.aggregate([
       // 1. Keep only the messages I sent or received.
       {
         $match: {
@@ -108,22 +108,23 @@ export async function sendMessage(req, res) {
     }
 
     const newMessage = new Message({
-        senderId,
-        receiverId,
-        text,
-        image: imageUrl,
-        video: videoUrl
-    })
+      senderId,
+      receiverId,
+      text,
+      image: imageUrl,
+      video: videoUrl,
+    });
     await newMessage.save();
 
     const receiverSocketId = getReceiverSocketId(receiverId);
-    if(receiverSocketId){   //only send the message in realtime if the user is online.
+    if (receiverSocketId) {
+      //only send the message in realtime if the user is online.
       io.emit("newMessage", newMessage);
     }
 
     res.status(201).json(newMessage);
   } catch (error) {
     console.error("Error in sendMessage:", error.message);
-    res.status(500).json({ message: "Internal server error"});
+    res.status(500).json({ message: "Internal server error" });
   }
 }

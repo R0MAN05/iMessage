@@ -35,8 +35,8 @@ app.get("/health", (req, res) => {
   res.status(200).json({ ok: true });
 });
 
-app.get("/api/auth", authRoutes);
-app.get("/api/messages", messageRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/messages", messageRoutes);
 
 // if the public directory exists, serve the static filess
 // this is for the production build
