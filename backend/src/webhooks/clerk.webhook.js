@@ -25,7 +25,6 @@ router.post("/", async (req, res) => {
 
     if (evt.type === "user.created" || evt.type === "user.updated") {
       const u = evt.data;
-
       const email =
         u.email_addresses?.find((e) => e.id === u.primary_email_address_id)?.email_address ??
         u.email_addresses?.[0]?.email_address;
@@ -33,9 +32,22 @@ router.post("/", async (req, res) => {
       const fullName =
         [u.first_name, u.last_name].filter(Boolean).join(" ") || u.username || email?.split("@")[0];
 
+      // Generate a unique username from Clerk's username, email, or name
+      let userName = u.username || email?.split("@")[0] || fullName?.toLowerCase().replace(/\s+/g, "_") || "user";
+
+      // Ensure username uniqueness by checking database and adding suffix if needed
+      let existingUser = await User.findOne({ userName });
+      let suffix = 1;
+      const baseUserName = userName;
+      while (existingUser && existingUser.clerkId !== u.id) {
+        userName = `${baseUserName}_${suffix}`;
+        existingUser = await User.findOne({ userName });
+        suffix++;
+      }
+
       await User.findOneAndUpdate(
         { clerkId: u.id },
-        { clerkId: u.id, email, fullName, profilePic: u.image_url },
+        { clerkId: u.id, email, fullName, profilePic: u.image_url, userName },
         { new: true, upsert: true, setDefaultsOnInsert: true },
       );
     }

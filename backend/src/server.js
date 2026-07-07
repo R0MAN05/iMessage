@@ -48,6 +48,7 @@ if (fs.existsSync(publicDir)) {
   });
 }
 
+
 server.listen(PORT, () => {
   connectDB();
   console.log("Server is up and running on PORT:", PORT);
