@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { withTransform } from "../../lib/imagekit";
 import { MessageVideo } from "./MessageVideo";
 import { MoreHorizontalIcon, DownloadIcon, Trash2Icon, XIcon } from "lucide-react";
@@ -17,11 +17,18 @@ export function MessageBubble({ message }) {
   const { deleteMessage } = useChatStore();
 
   // Close menu when clicking outside
-  const handleClickOutside = (event) => {
-    if (menuRef.current && !menuRef.current.contains(event.target)) {
-      setIsMenuOpen(false);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
     }
-  };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isMenuOpen]);
 
   // Handle download
   const handleDownload = async () => {
@@ -53,8 +60,8 @@ export function MessageBubble({ message }) {
   };
 
   // Handle delete
-  const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete this message?")) return;
+  const handleDelete = async (forEveryone = false) => {
+    if (!window.confirm(forEveryone ? "Delete for everyone?" : "Delete for me only?")) return;
 
     try {
       setIsMenuOpen(false);
@@ -98,47 +105,60 @@ export function MessageBubble({ message }) {
           >
             {message.time}
           </p>
-          {isOwnMessage && (
-            <div className="relative">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsMenuOpen(!isMenuOpen);
-                }}
-                className="p-1 rounded hover:bg-black/10 transition-colors text-muted-foreground/70"
-                aria-label="More options"
-              >
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMenuOpen(!isMenuOpen);
+              }}
+              className="p-1 rounded hover:bg-black/10 transition-colors text-muted-foreground/70"
+              aria-label={isMenuOpen ? "Close menu" : "More options"}
+            >
+              {isMenuOpen ? (
+                <XIcon className="size-4" strokeWidth={2.5} />
+              ) : (
                 <MoreHorizontalIcon className="size-4" strokeWidth={2.5} />
-              </button>
-              {isMenuOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-10"
-                    onClick={handleClickOutside}
-                    aria-hidden="true"
-                  />
-                  <div className="absolute right-0 bottom-full mb-1 z-20 min-w-[140px] rounded-md border border-border bg-popover p-1 shadow-lg animate-in fade-in zoom-in-95">
-                    {hasMedia && (
+              )}
+            </button>
+            {isMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setIsMenuOpen(false)}
+                  aria-hidden="true"
+                />
+                <div className="absolute right-0 bottom-full mb-1 z-20 min-w-[180px] rounded-md border border-border bg-popover p-1.5 shadow-lg animate-in fade-in zoom-in-95">
+                  {hasMedia && !isOwnMessage && (
+                    <button
+                      onClick={handleDownload}
+                      className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <DownloadIcon className="size-4" strokeWidth={2} />
+                      Download
+                    </button>
+                  )}
+                  {isOwnMessage && (
+                    <>
                       <button
-                        onClick={handleDownload}
+                        onClick={() => handleDelete(false)}
                         className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
                       >
-                        <DownloadIcon className="size-4" strokeWidth={2} />
-                        Download
+                        <Trash2Icon className="size-4" strokeWidth={2} />
+                        Delete for me
                       </button>
-                    )}
-                    <button
-                      onClick={handleDelete}
-                      className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-destructive hover:bg-accent hover:text-destructive"
-                    >
-                      <Trash2Icon className="size-4" strokeWidth={2} />
-                      Delete
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+                      <button
+                        onClick={() => handleDelete(true)}
+                        className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-destructive hover:bg-accent hover:text-destructive"
+                      >
+                        <Trash2Icon className="size-4" strokeWidth={2} />
+                        Delete for everyone
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

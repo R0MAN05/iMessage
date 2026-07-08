@@ -134,6 +134,7 @@ export async function deleteMessage(req, res) {
   try {
     const { id: messageId } = req.params;
     const userId = req.user._id;
+    const { forEveryone } = req.body;
 
     const message = await Message.findById(messageId);
 
@@ -151,13 +152,13 @@ export async function deleteMessage(req, res) {
     // Emit socket event for real-time deletion
     const receiverSocketId = getReceiverSocketId(message.receiverId);
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("deleteMessage", messageId);
+      io.to(receiverSocketId).emit("deleteMessage", { messageId, forEveryone });
     }
 
     // Also emit to sender to update their UI
     const senderSocketId = getReceiverSocketId(userId);
     if (senderSocketId) {
-      io.to(senderSocketId).emit("deleteMessage", messageId);
+      io.to(senderSocketId).emit("deleteMessage", { messageId, forEveryone });
     }
 
     res.status(200).json({ message: "Message deleted successfully" });
