@@ -127,7 +127,7 @@ export function MessageBubble({ message }) {
                   onClick={() => setIsMenuOpen(false)}
                   aria-hidden="true"
                 />
-                <div className="absolute right-0 bottom-full mb-1 z-20 min-w-[180px] rounded-md border border-border bg-popover p-1.5 shadow-lg animate-in fade-in zoom-in-95">
+                <div className="absolute right-0 bottom-full mb-1 z-20 min-w-[200px] rounded-lg border border-border bg-popover p-2 shadow-xl animate-in fade-in zoom-in-95">
                   {hasMedia && !isOwnMessage && (
                     <button
                       onClick={handleDownload}
@@ -135,6 +135,15 @@ export function MessageBubble({ message }) {
                     >
                       <DownloadIcon className="size-4" strokeWidth={2} />
                       Download
+                    </button>
+                  )}
+                  {!isOwnMessage && (
+                    <button
+                      onClick={() => handleDelete(false)}
+                      className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-destructive hover:bg-accent hover:text-destructive"
+                    >
+                      <Trash2Icon className="size-4" strokeWidth={2} />
+                      Delete for me
                     </button>
                   )}
                   {isOwnMessage && (
