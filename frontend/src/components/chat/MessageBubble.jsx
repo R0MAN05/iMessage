@@ -65,7 +65,7 @@ export function MessageBubble({ message }) {
 
     try {
       setIsMenuOpen(false);
-      await deleteMessage(message.id);
+      await deleteMessage(message.id, forEveryone);
       toast.success("Message deleted");
     } catch (error) {
       console.error("Delete error:", error);
@@ -111,7 +111,11 @@ export function MessageBubble({ message }) {
                 e.stopPropagation();
                 setIsMenuOpen(!isMenuOpen);
               }}
-              className="p-1 rounded hover:bg-black/10 transition-colors text-muted-foreground/70"
+              className={`p-1 rounded transition-colors ${
+                isMenuOpen
+                  ? "bg-black/15 text-foreground"
+                  : "text-muted-foreground/70 hover:bg-black/10"
+              }`}
               aria-label={isMenuOpen ? "Close menu" : "More options"}
             >
               {isMenuOpen ? (
@@ -127,11 +131,15 @@ export function MessageBubble({ message }) {
                   onClick={() => setIsMenuOpen(false)}
                   aria-hidden="true"
                 />
-                <div className="absolute right-0 bottom-full mb-1 z-20 min-w-[200px] rounded-lg border border-border bg-popover p-2 shadow-xl animate-in fade-in zoom-in-95">
+                <div
+                  className={`absolute bottom-full mb-1.5 z-20 min-w-[220px] rounded-xl border border-border/60 bg-background/95 backdrop-blur-md p-1.5 shadow-2xl animate-in fade-in zoom-in-95 ${
+                    isOwnMessage ? "right-0" : "left-0"
+                  }`}
+                >
                   {hasMedia && !isOwnMessage && (
                     <button
                       onClick={handleDownload}
-                      className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
+                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                     >
                       <DownloadIcon className="size-4" strokeWidth={2} />
                       Download
@@ -140,7 +148,7 @@ export function MessageBubble({ message }) {
                   {!isOwnMessage && (
                     <button
                       onClick={() => handleDelete(false)}
-                      className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-destructive hover:bg-accent hover:text-destructive"
+                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
                     >
                       <Trash2Icon className="size-4" strokeWidth={2} />
                       Delete for me
@@ -150,14 +158,14 @@ export function MessageBubble({ message }) {
                     <>
                       <button
                         onClick={() => handleDelete(false)}
-                        className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
+                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                       >
                         <Trash2Icon className="size-4" strokeWidth={2} />
                         Delete for me
                       </button>
                       <button
                         onClick={() => handleDelete(true)}
-                        className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-destructive hover:bg-accent hover:text-destructive"
+                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
                       >
                         <Trash2Icon className="size-4" strokeWidth={2} />
                         Delete for everyone

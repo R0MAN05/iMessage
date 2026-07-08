@@ -142,23 +142,25 @@ export async function deleteMessage(req, res) {
       return res.status(404).json({ message: "Message not found" });
     }
 
-    // Only the sender can delete their own message
-    if (String(message.senderId) !== String(userId)) {
+    const isSender = String(message.senderId) === String(userId);
+    const isReceiver = String(message.receiverId) === String(userId);
+
+    // Allow both sender and receiver to delete
+    if (!isSender && !isReceiver) {
       return res.status(403).json({ message: "Not authorized to delete this message" });
     }
 
     await Message.findByIdAndDelete(messageId);
 
-    // Emit socket event for real-time deletion
+    // Emit socket event to both parties for real-time deletion
+    const senderSocketId = getReceiverSocketId(message.senderId);
     const receiverSocketId = getReceiverSocketId(message.receiverId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("deleteMessage", { messageId, forEveryone });
-    }
 
-    // Also emit to sender to update their UI
-    const senderSocketId = getReceiverSocketId(userId);
     if (senderSocketId) {
       io.to(senderSocketId).emit("deleteMessage", { messageId, forEveryone });
+    }
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("deleteMessage", { messageId, forEveryone });
     }
 
     res.status(200).json({ message: "Message deleted successfully" });

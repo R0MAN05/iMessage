@@ -97,9 +97,10 @@ export const useChatStore = create(
         });
 
         socket.off("deleteMessage");
-        socket.on("deleteMessage", (messageId) => {
+        socket.on("deleteMessage", (data) => {
+          const id = data?.messageId || data;
           set((state) => ({
-            messages: state.messages.filter((msg) => msg._id !== messageId),
+            messages: state.messages.filter((msg) => msg._id !== id),
           }));
           get().getConversations();
         });
@@ -149,9 +150,9 @@ export const useChatStore = create(
         }
       },
 
-      deleteMessage: async (messageId) => {
+      deleteMessage: async (messageId, forEveryone = false) => {
         try {
-          await axiosInstance.delete(`/messages/${messageId}`);
+          await axiosInstance.delete(`/messages/${messageId}`, { data: { forEveryone } });
           set((state) => ({
             messages: state.messages.filter((msg) => msg._id !== messageId),
           }));
