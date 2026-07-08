@@ -3,6 +3,7 @@ import Message from "../models/message.model.js";
 
 import { hasImageKitConfig, uploadChatMedia } from "../lib/imagekit.js";
 import { getReceiverSocketId, io } from "../lib/socket.js";
+import axios from "axios";
 
 export async function getUsersForSidebar(req, res) {
   try {
@@ -126,5 +127,86 @@ export async function sendMessage(req, res) {
   } catch (error) {
     console.error("Error in sendMessage:", error.message);
     res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export async function deleteMessage(req, res) {
+  try {
+    const { id: messageId } = req.params;
+    const userId = req.user._id;
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    // Only the sender can delete their own message
+    if (String(message.senderId) !== String(userId)) {
+      return res.status(403).json({ message: "Not authorized to delete this message" });
+    }
+
+    await Message.findByIdAndDelete(messageId);
+
+    // Emit socket event for real-time deletion
+    const receiverSocketId = getReceiverSocketId(message.receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("deleteMessage", messageId);
+    }
+
+    // Also emit to sender to update their UI
+    const senderSocketId = getReceiverSocketId(userId);
+    if (senderSocketId) {
+      io.to(senderSocketId).emit("deleteMessage", messageId);
+    }
+
+    res.status(200).json({ message: "Message deleted successfully" });
+  } catch (error) {
+    console.error("Error in deleteMessage:", error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export async function downloadMedia(req, res) {
+  try {
+    const { id: messageId } = req.params;
+    const userId = req.user._id;
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    // Check if user is part of this conversation
+    const isSender = String(message.senderId) === String(userId);
+    const isReceiver = String(message.receiverId) === String(userId);
+
+    if (!isSender && !isReceiver) {
+      return res.status(403).json({ message: "Not authorized to download this media" });
+    }
+
+    const mediaUrl = message.image || message.video;
+    if (!mediaUrl) {
+      return res.status(404).json({ message: "No media found in this message" });
+    }
+
+    // Fetch the file from ImageKit and stream it to the client
+    const response = await axios.get(mediaUrl, {
+      responseType: "stream",
+      timeout: 30000,
+    });
+
+    const contentType = response.headers["content-type"] || "application/octet-stream";
+    const contentDisposition = response.headers["content-disposition"] || `attachment; filename="media"`;
+
+    res.setHeader("Content-Type", contentType);
+    res.setHeader("Content-Disposition", contentDisposition);
+    res.setHeader("Cache-Control", "private, max-age=3600");
+
+    response.data.pipe(res);
+  } catch (error) {
+    console.error("Error in downloadMedia:", error.message);
+    res.status(500).json({ message: "Failed to download media" });
   }
 }

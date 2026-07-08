@@ -95,6 +95,14 @@ export const useChatStore = create(
 
           get().getConversations();
         });
+
+        socket.off("deleteMessage");
+        socket.on("deleteMessage", (messageId) => {
+          set((state) => ({
+            messages: state.messages.filter((msg) => msg._id !== messageId),
+          }));
+          get().getConversations();
+        });
       },
 
       unsubscribeFromMessages: () => {
@@ -138,6 +146,48 @@ export const useChatStore = create(
           return await get().sendMessage(formData);
         } finally {
           set({ isSendingMedia: false });
+        }
+      },
+
+      deleteMessage: async (messageId) => {
+        try {
+          await axiosInstance.delete(`/messages/${messageId}`);
+          set((state) => ({
+            messages: state.messages.filter((msg) => msg._id !== messageId),
+          }));
+          get().getConversations();
+          return true;
+        } catch (error) {
+          toast.error(error.response?.data?.message || "Failed to delete message");
+          return false;
+        }
+      },
+
+      downloadMedia: async (messageId) => {
+        try {
+          const response = await axiosInstance.get(`/messages/download/${messageId}`, {
+            responseType: "blob",
+          });
+
+          // Create a blob URL and trigger download
+          const url = window.URL.createObjectURL(new Blob([response.data]));
+          const link = document.createElement("a");
+          link.href = url;
+
+          // Try to get filename from Content-Disposition header
+          const contentDisposition = response.headers["content-disposition"];
+          let filename = "media";
+          if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename="?(.+?)"?(;|$)/);
+            if (filenameMatch) filename = filenameMatch[1];
+          }
+          link.setAttribute("download", filename);
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(url);
+        } catch (error) {
+          toast.error(error.response?.data?.message || "Failed to download media");
         }
       },
     }),
